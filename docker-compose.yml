@@ -24,6 +24,8 @@ services:
       - 8080:8080
       - 5555:5555
     command: ['npm', 'run', 'dev']
+    env_file:
+      - .env.api
     depends_on:
       - db
   db:
