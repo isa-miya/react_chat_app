@@ -150,6 +150,13 @@ exports.forgotPassword = async (req, res, next) => {
 
 // * POST => /api/auth/reset-password
 exports.resetPassword = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      errors: errors.array()
+    });
+  }
   const { token, newPassword } = req.body;
   try {
     const decoded = verifyEmail(token);
