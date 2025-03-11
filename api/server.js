@@ -1,5 +1,7 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -9,7 +11,13 @@ const ChatRoomsRouter = require('./routes/chatrooms.router');
 const MessagesRouter = require('./routes/messages.router');
 
 // アプリの設定
-app.use(express.json(), express.urlencoded({ extended: true }), cookieParser());
+app.use(express.json(),
+  express.urlencoded({ extended: true }),
+  cookieParser(),
+  cors({ origin: process.env.CLIENT_URL, credentials: true }));
+
+// 静的ファイルを提供する設定
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ルーターのマウント
 app.use('/api/auth', AUthRouter);

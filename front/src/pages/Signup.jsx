@@ -1,17 +1,43 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
+	const [formData, setFormData] = useState({
+		name: '',
+		email: '',
+		password: '',
+	});
+
+	const navigate = useNavigate();
+	const { signup, error } = useAuth();
+
+	const handleChange = (e) => {
+		const { name, value } = e.target;
+		setFormData((prevData) => ({
+			...prevData,
+			[name]: value,
+		}));
+	};
+
+	const handleSubmit = (e) => {
+		e.preventDefault();
+		signup(formData, navigate);
+	};
+
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-gray-100">
 			<div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
 				<h2 className="text-2xl font-bold text-center mb-6">サインアップ</h2>
-				<form>
+				{error && <p className="text-red-500 text-center mb-4">{error}</p>}
+				<form onSubmit={handleSubmit}>
 					<input
 						type="text"
 						name="name"
 						placeholder="ユーザー名"
 						className="w-full p-3 border rounded mb-4"
+						onChange={handleChange}
+						value={formData.name}
 						required
 					/>
 					<input
@@ -19,6 +45,8 @@ const Signup = () => {
 						name="email"
 						placeholder="メールアドレス"
 						className="w-full p-3 border rounded mb-4"
+						onChange={handleChange}
+						value={formData.email}
 						required
 					/>
 					<input
@@ -26,6 +54,8 @@ const Signup = () => {
 						name="password"
 						placeholder="パスワード"
 						className="w-full p-3 border rounded mb-4"
+						onChange={handleChange}
+						value={formData.password}
 						required
 					/>
 					<button

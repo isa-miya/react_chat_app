@@ -15,6 +15,7 @@ model User {
   isVerified Boolean @default(false)
   messages Message[]
   rooms UserRooms[]
+  imageUrl String?
   createdAt DateTime @default(now())
 }
 

@@ -10,6 +10,8 @@ services:
     ports:
       - 3000:3000
     command: ['npm', 'run', 'start']
+    env_file:
+      - .env.front
     depends_on:
       - api
   api:

@@ -1,7 +1,8 @@
 const router = require('express').Router();
 const { check } = require('express-validator');
 const authMiddleware = require('../middleware/auth.middleware');
-const { signup, verifyEmail, signin, signout, checkAuth, forgotPassword, resetPassword } = require('../controllers/auth.controller');
+const upload = require('../middleware/multer');
+const { signup, verifyEmail, signin, signout, checkAuth, forgotPassword, resetPassword, getProfile, updateProfile } = require('../controllers/auth.controller');
 
 // * POST => /api/auth/signup
 router.post('/signup',
@@ -37,11 +38,22 @@ router.post('/forgot-password',
   forgotPassword);
 
 // * POST => /api/auth/reset-password
-router.post('reset-password',
+router.post('/reset-password',
   [
     check("newPassword").isLength({ min: 6 }).withMessage("パスワードは６文字以上で入力してください")
   ],
   resetPassword
 );
+
+// * GET => /api/auth/profile
+router.get('/profile', authMiddleware, getProfile);
+
+// * PATCH => /api/auth/profile
+router.patch('/profile',
+  upload.single('image'),
+  [
+    check("name").notEmpty().withMessage('名前を入力してください')
+  ],
+  authMiddleware, updateProfile);
 
 module.exports = router;
