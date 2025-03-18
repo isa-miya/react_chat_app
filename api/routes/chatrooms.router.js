@@ -16,7 +16,7 @@ router.post('/create', authMiddleware,
 // * POST => /api/chatrooms/join/:id
 router.post('/join/:id', authMiddleware, joinChatRoom);
 
-// * POST => /api/chatrooms/leave/:id
+// * DELETE => /api/chatrooms/leave/:id
 router.delete('/leave/:id', authMiddleware, leaveChatRoom);
 
 module.exports = router;

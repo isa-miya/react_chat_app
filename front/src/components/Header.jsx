@@ -21,6 +21,9 @@ const Header = () => {
 					</Link>
 					{isLoggedIn ? (
 						<>
+							<Link to="/chat-rooms" className="hover:underline">
+								ChatRooms
+							</Link>
 							<Link to="/profile" className="hover:underline">
 								Profile
 							</Link>

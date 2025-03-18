@@ -61,9 +61,14 @@ exports.getChatRooms = async (req, res, next) => {
         chatrooms: []
       });
     };
+    const isMemberedChatRooms = chatrooms.map((room) => ({
+      ...room,
+      isMember: room.users.some((userRoom => userRoom.userId === req.user.userId))
+    }));
+
     res.status(200).json({
       success: true,
-      chatrooms
+      chatrooms: isMemberedChatRooms
     });
   } catch (error) {
     next(error);
@@ -126,7 +131,7 @@ exports.joinChatRoom = async (req, res, next) => {
   }
 };
 
-// * POST => /api/chatrooms/leave/:id
+// * DELETE => /api/chatrooms/leave/:id
 exports.leaveChatRoom = async (req, res, next) => {
   const roomId = parseInt(req.params.id);
   try {
@@ -138,9 +143,11 @@ exports.leaveChatRoom = async (req, res, next) => {
         }
       }
     });
+
     res.status(200).json({
       success: true,
-      message: 'チャットルームを退出しました'
+      message: 'チャットルームを退出しました',
+      roomId: roomId
     });
   } catch (error) {
     next(error);

@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/auth/signin`, formData, { withCredentials: true });
       setIsLoggedIn(true);
-      navigate('/chatrooms');
+      navigate('/chat-rooms');
     } catch (error) {
       console.error(error);
       setError(error.response?.data?.message || 'ログインに失敗しました');
