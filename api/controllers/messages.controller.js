@@ -144,7 +144,8 @@ exports.deleteMessage = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'メッセージを削除しました'
+      message: 'メッセージを削除しました',
+      messageId: messageId
     });
   } catch (error) {
     next(error);

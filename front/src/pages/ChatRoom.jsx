@@ -1,23 +1,75 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { leaveChatRoom } from '../redux/chatroomsReducer';
+// # deleteMessage Actionをインポート
+import { sendMessage, getMessages, updateMessage, deleteMessage } from '../redux/messagesReducer';
+import LoadingSpinner from '../components/LoadingSpinner';
+
+import { useAuth } from '../context/AuthContext';
 
 const ChatRoom = () => {
-	const messages = [
-		{ sender: 'user1', text: 'Message1' },
-		{ sender: 'user2', text: 'Message2' },
-		{ sender: 'user3', text: 'Message3' },
-	];
+	const [content, setContent] = useState('');
+	const [editMessageId, setEditMessageId] = useState(null);
+	const [editContent, setEditContent] = useState('');
+
+	const { messages, error, loading } = useSelector((state) => state.messages);
 	const { roomId } = useParams();
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
+
+	const { user } = useAuth();
+
+	useEffect(() => {
+		dispatch(getMessages({ roomId }));
+	}, [dispatch, roomId]);
 
 	const handleLeaveChatRoom = () => {
 		dispatch(leaveChatRoom(roomId));
 		navigate('/chat-rooms');
 	};
+
+	const handleSendMessage = (e) => {
+		e.preventDefault();
+		if (!content.trim()) return;
+		dispatch(sendMessage({ roomId, content })).then(() => {
+			dispatch(getMessages({ roomId }));
+		});
+		setContent('');
+	};
+
+	const handleEditClick = (msg) => {
+		setEditMessageId(msg.id);
+		setEditContent(msg.content);
+	};
+
+	const handleUpdateMessage = (e) => {
+		e.preventDefault();
+		dispatch(updateMessage({ id: editMessageId, content: editContent })).then(() => {
+			dispatch(getMessages({ roomId }));
+			setEditMessageId(null);
+			setEditContent('');
+		});
+	};
+
+	const handleDeleteMessage = (msgId) => {
+		const confirmDelete = window.confirm('このメッセージを削除しますか？');
+		// # 削除処理を追記
+		if (confirmDelete) {
+			dispatch(deleteMessage({ msgId })).then(() => {
+				dispatch(getMessages({ roomId }));
+			});
+		}
+	};
+
+	if (loading) {
+		return <LoadingSpinner />;
+	}
+
+	if (!user) {
+		return <LoadingSpinner />;
+	}
 
 	return (
 		<div className="min-h-screen bg-gray-100 flex flex-col p-4">
@@ -31,16 +83,65 @@ const ChatRoom = () => {
 				</button>
 			</div>
 			<div className="flex-1 bg-white p-4 rounded-lg shadow-md overflow-auto">
-				{messages.map((msg, index) => (
-					<p key={index} className="mb-2">
-						<strong>{msg.sender}: </strong> {msg.text}
-					</p>
+				{messages.flat().map((msg, index) => (
+					<div
+						key={index}
+						className={`mb-2 relative group ${
+							msg.user?.id === user?.userId ? 'text-right' : 'text-left'
+						}`}
+					>
+						{editMessageId === msg.id ? (
+							<form onSubmit={handleUpdateMessage} className="flex justify-end gap-2">
+								<input
+									type="text"
+									value={editContent}
+									onChange={(e) => setEditContent(e.target.value)}
+									className="p-1 border rounded w-1/2 inline-block"
+								/>
+								<button
+									type="submit"
+									className="absolute right-0 -bottom-6 text-sm ml-2 text-blue-500 hover:underline"
+								>
+									更新
+								</button>
+							</form>
+						) : (
+							<>
+								{msg.user?.id !== user?.userId && (
+									<strong className="block text-gray-600">{msg.user?.name}</strong>
+								)}
+								<span className="inline-block px-3 py-1">{msg.content}</span>
+								{msg.user?.id === user?.userId && (
+									<div className="justify-end hidden group-hover:flex gap-2">
+										<button
+											onClick={() => handleEditClick(msg)}
+											className="text-sm text-blue-500 hover:underline"
+										>
+											編集
+										</button>
+										<button
+											onClick={() => handleDeleteMessage(msg.id)}
+											className="text-sm text-blue-500 hover:underline"
+										>
+											削除
+										</button>
+									</div>
+								)}
+							</>
+						)}
+					</div>
 				))}
 			</div>
-			<div className="flex mt-4">
-				<input type="text" className="flex-1 p-2 border rounded" />
+			{error && <p className="text-red-500 text-center">{error}</p>}
+			<form onSubmit={handleSendMessage} className="flex mt-4">
+				<input
+					type="text"
+					value={content}
+					onChange={(e) => setContent(e.target.value)}
+					className="flex-1 p-2 border rounded"
+				/>
 				<button className="bg-blue-500 text-white p-2 rounded ml-2">送信</button>
-			</div>
+			</form>
 		</div>
 	);
 };

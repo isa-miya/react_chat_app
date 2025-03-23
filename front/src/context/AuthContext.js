@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext({
   error: null,
@@ -12,27 +11,30 @@ const AuthContext = createContext({
   resetMail: () => { },
   resetPassword: () => { },
   getProfile: () => { },
-  editProfile: () => { }
+  editProfile: () => { },
+  // # userを追加
+  user: null
 });
 
 export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(null);
-  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
-  const checkAuth = async (navigate) => {
+  const checkAuth = async () => {
     try {
-      await axios.get(`${process.env.REACT_APP_API_URL}/auth/check-auth`, { withCredentials: true });
+      // # 編集
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/auth/check-auth`, { withCredentials: true });
+      setUser(response.data.user);
       setIsLoggedIn(true);
     } catch (error) {
       setIsLoggedIn(false);
-      navigate('/login');
     }
   };
 
   useEffect(() => {
-    checkAuth(navigate);
-  }, [navigate]);
+    checkAuth();
+  }, []);
 
   const signup = async (formData, navigate) => {
     try {
@@ -125,7 +127,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ error, signup, verifyEmail, login, isLoggedIn, signout, resetMail, resetPassword, getProfile, editProfile }}>
+    // # valueにuserを追加
+    <AuthContext.Provider value={{ error, signup, verifyEmail, login, isLoggedIn, signout, resetMail, resetPassword, getProfile, editProfile, user }}>
       {children}
     </AuthContext.Provider>
   )
