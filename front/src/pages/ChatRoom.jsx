@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+// # socket.io-clientをインポート
+import { io } from 'socket.io-client';
 
 import { leaveChatRoom } from '../redux/chatroomsReducer';
-// # deleteMessage Actionをインポート
 import { sendMessage, getMessages, updateMessage, deleteMessage } from '../redux/messagesReducer';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -21,8 +22,20 @@ const ChatRoom = () => {
 
 	const { user } = useAuth();
 
+	const socketRef = useRef(null);
+
 	useEffect(() => {
 		dispatch(getMessages({ roomId }));
+		socketRef.current = io(process.env.REACT_APP_SOCKET_URL, {
+			withCredentials: true,
+		});
+		socketRef.current.emit('joinRoom', roomId);
+		socketRef.current.on('newMessage', () => {
+			dispatch(getMessages({ roomId }));
+		});
+		return () => {
+			socketRef.current.disconnect();
+		};
 	}, [dispatch, roomId]);
 
 	const handleLeaveChatRoom = () => {
@@ -35,6 +48,7 @@ const ChatRoom = () => {
 		if (!content.trim()) return;
 		dispatch(sendMessage({ roomId, content })).then(() => {
 			dispatch(getMessages({ roomId }));
+			socketRef.current.emit('newMessage', roomId);
 		});
 		setContent('');
 	};
@@ -48,6 +62,7 @@ const ChatRoom = () => {
 		e.preventDefault();
 		dispatch(updateMessage({ id: editMessageId, content: editContent })).then(() => {
 			dispatch(getMessages({ roomId }));
+			socketRef.current.emit('newMessage', roomId);
 			setEditMessageId(null);
 			setEditContent('');
 		});
@@ -55,10 +70,10 @@ const ChatRoom = () => {
 
 	const handleDeleteMessage = (msgId) => {
 		const confirmDelete = window.confirm('このメッセージを削除しますか？');
-		// # 削除処理を追記
 		if (confirmDelete) {
 			dispatch(deleteMessage({ msgId })).then(() => {
 				dispatch(getMessages({ roomId }));
+				socketRef.current.emit('newMessage', roomId);
 			});
 		}
 	};
@@ -107,11 +122,11 @@ const ChatRoom = () => {
 							</form>
 						) : (
 							<>
-								{msg.user?.id !== user?.userId && (
+								{msg.userId !== user?.userId && (
 									<strong className="block text-gray-600">{msg.user?.name}</strong>
 								)}
 								<span className="inline-block px-3 py-1">{msg.content}</span>
-								{msg.user?.id === user?.userId && (
+								{msg.userId === user?.userId && (
 									<div className="justify-end hidden group-hover:flex gap-2">
 										<button
 											onClick={() => handleEditClick(msg)}

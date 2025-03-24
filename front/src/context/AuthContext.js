@@ -12,7 +12,6 @@ const AuthContext = createContext({
   resetPassword: () => { },
   getProfile: () => { },
   editProfile: () => { },
-  // # userを追加
   user: null
 });
 
@@ -23,7 +22,6 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      // # 編集
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/auth/check-auth`, { withCredentials: true });
       setUser(response.data.user);
       setIsLoggedIn(true);
@@ -62,7 +60,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (formData, navigate) => {
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/auth/signin`, formData, { withCredentials: true });
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/signin`, formData, { withCredentials: true });
+      setUser({ userId: response.data.user.id, name: response.data.user.name });
       setIsLoggedIn(true);
       navigate('/chat-rooms');
     } catch (error) {
